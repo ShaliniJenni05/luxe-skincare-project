@@ -31,6 +31,7 @@
 </head>
 <body>
 
+
     <div id="welcome-modal">
         <div class="modal-content">
             <h2>Welcome to Luxe Skincare</h2>
@@ -38,6 +39,35 @@
             <button onclick="closeModal()">Enter Store</button>
         </div>
     </div>
+    <div id="checkout-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:30px; border:2px solid #bd7d68; z-index:1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); color: black;">
+    <h3 style="color:#bd7d68;">Complete Your Order</h3>
+    <p id="selected-product-display" style="font-weight:bold;"></p>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <input type="text" id="full-name" placeholder="Enter Full Name" style="padding:10px; border:1px solid #ddd;">
+        <input type="email" id="email" placeholder="Enter Email" style="padding:10px; border:1px solid #ddd;">
+        
+        <button onclick="finalCheckout()" style="background:#bd7d68; color:white; padding:10px; border:none; cursor:pointer;">Confirm & Pay</button>
+        <button onclick="closeCheckout()" style="background:none; border:none; color:gray; cursor:pointer;">Cancel</button>
+    </div>
+</div>
+    <div id="login-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+    <div class="modal-content">
+        <h2>Sign In</h2>
+        <input type="text" id="username" placeholder="Username" style="display:block; margin: 10px auto; padding: 10px; width: 80%;">
+        <input type="password" id="password" placeholder="Password" style="display:block; margin: 10px auto; padding: 10px; width: 80%;">
+        <button onclick="handleLogin()">Login to Shop</button>
+    </div>
+</div>
+
+<div id="confirm-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center;">
+    <div class="modal-content">
+        <h2>Confirm Your Order</h2>
+        <p id="confirm-item-text"></p>
+        <button onclick="finalCheckout()">Confirm & Pay</button>
+        <button onclick="closeConfirm()" style="background:#666;">Cancel</button>
+    </div>
+</div>
 
     <header>
         <h1>LUXE SKINCARE</h1>
@@ -50,6 +80,13 @@
     </div>
 
     <div class="section">
+        
+        <div style="padding-bottom: 20px;">
+       <input type="text" id="product-search" placeholder="Search for products..." 
+               onkeyup="filterProducts()" 
+               style="padding: 12px; width: 80%; max-width: 400px; border: 1px solid #ccc; border-radius: 25px; outline: none; font-family: inherit;">
+            
+    </div>
         <h2>Shop Our Collection</h2>
         <div id="product-container" class="product-grid">
             </div>
@@ -60,52 +97,134 @@
     </footer>
 
     <script>
-        // Modal Logic
-        function closeModal() {
-            document.getElementById('welcome-modal').style.display = 'none';
-        }
+        let isLoggedIn = false;
+let selectedProduct = "";
+let allProducts = []; // Stores products for the search feature
 
-        // Load Products Logic
-        async function loadShop() {
-            try {
-                // Try to fetch from your local MySQL server
-                const response = await fetch('http://localhost:5000/api/products');
-                if (!response.ok) throw new Error("Local server offline");
-                const products = await response.json();
-                renderProducts(products);
-            } catch (err) {
-                console.log("Using GitHub Fallback Data");
-                // FALLBACK: These images must exist in your /images folder on GitHub
-                const demoProducts = [
-                    { task_name: "Luxe Face Wash", image_url: "wash.png", price:"15.00" },
-                    { task_name: "Glow Serum", image_url: "serum.jpg", price:"25.00" },
-                    { task_name: "Hydrating SPF 50", image_url: "cream.jpg", price:"30.00" }
-                ];
-                renderProducts(demoProducts);
-            }
-        }
+// 1. Force Login first - This runs as soon as the page opens
+function openCheckout(productName) {
+    selectedProduct = productName;
+    document.getElementById('selected-product-display').innerText = "Product: " + productName;
+    document.getElementById('checkout-modal').style.display = 'block';
+}
 
-        function renderProducts(products) {
-            const container = document.getElementById('product-container');
-            container.innerHTML = products.map(item => `
-                <div class="product-card">
-                    <img src="images/${item.image_url}" alt="${item.task_name}">
-                    <h3>${item.task_name}</h3>
-                    <p style="font-weight: bold; color: #bd7d68;">$${item.price || '20.00'}
-                        </p>
-                    <button onclick="purchase('${item.task_name}')">Buy Now</button>
-                </div>
-            `).join('');
-        }
+function closeCheckout() {
+    document.getElementById('checkout-modal').style.display = 'none';
+}
 
-        // Buy Button Logic
-        function purchase(productName) {
-            alert("Success! " + productName + "  has been added to your cart.");
-            console.log("User clicked buy for:" + productName);
-        }
+async function finalCheckout() {
+    const orderData = {
+        fullName: document.getElementById('full-name').value,
+        email: document.getElementById('email').value,
+        username: document.getElementById('username')?.value || "Guest",
+        product_name: selectedProduct
+    };
 
-        // Start everything
-        window.onload = loadShop;
+    const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+    });
+
+    if (response.ok) {
+        alert("Order Saved to MySQL!");
+        closeCheckout();
+    }
+}
+window.onload = function() {
+    document.getElementById('login-modal').style.display = 'flex';
+};
+
+// 2. Handle Login
+function handleLogin() {
+    const user = document.getElementById('username').value;
+    if(user) {
+        isLoggedIn = true;
+        document.getElementById('login-modal').style.display = 'none';
+        loadShop(); // Only load products AFTER login
+    } else {
+        alert("Please enter a username to continue.");
+    }
+}
+
+// 3. Load Products with Search Support
+async function loadShop() {
+    try {
+        const response = await fetch('http://localhost:5000/api/products');
+        allProducts = await response.json();
+    } catch (err) {
+        // Fallback data if local database is offline
+        allProducts = [
+            { task_name: "Luxe Face Wash", image_url: "wash.png", price: "15.00" },
+            { task_name: "Glow Serum", image_url: "serum.jpg", price: "25.00" },
+            { task_name: "Hydrating SPF 50", image_url: "cream.jpg", price: "30.00" }
+        ];
+    }
+    renderProducts(allProducts); // Initial display
+}
+
+// 4. Search/Filter Logic
+function filterProducts() {
+    const searchTerm = document.getElementById('product-search').value.toLowerCase();
+    
+    // Filter the list based on what the user types
+    const filtered = allProducts.filter(item => 
+        item.task_name.toLowerCase().includes(searchTerm)
+    );
+    
+    renderProducts(filtered); // Update the screen with only matched items
+}
+
+// 5. Display Products on Page
+function renderProducts(products) {
+    const container = document.getElementById('product-container');
+    container.innerHTML = products.map(item => `
+        <div class="product-card">
+            <img src="images/${item.image_url}" alt="${item.task_name}">
+            <h3>${item.task_name}</h3>
+            <p style="font-weight: bold; color: #bd7d68;">$${item.price}</p>
+            <button onclick="openCheckout('${item.task_name}')">Buy Now</button>
+        </div>
+    `).join('');
+}
+
+// 6. Order Confirmation Flow
+function purchase(productName) {
+    selectedProduct = productName;
+    document.getElementById('confirm-item-text').innerText = "Are you sure you want to order: " + productName + "?";
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function closeConfirm() {
+    document.getElementById('confirm-modal').style.display = 'none';
+    }
+    async function finalCheckout() {
+    const orderData = {
+        fullName: document.getElementById('full-name').value, // Make sure this ID exists in your HTML
+        email: document.getElementById('email').value,         // Make sure this ID exists in your HTML
+        username: document.getElementById('username').value, 
+        product_name: selectedProduct
+    };
+
+    try {
+        const response = await fetch('http://localhost:5000/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if (response.ok) {
+            alert("Success! Your order is in our database.");
+            closeConfirm();
+        }
+    } catch (err) {
+        console.error("Connection failed", err);
+    }
+}
+
+function closeModal() {
+    document.getElementById('welcome-modal').style.display = 'none';
+}
     </script>
 </body>
 </html>
