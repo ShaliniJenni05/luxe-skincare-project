@@ -59,13 +59,12 @@
             const container = document.getElementById('product-container');
             
             container.innerHTML = products.map(item => `
-                <div class="product-card">
-                    <img src="images/${item.image_url}" alt="${item.task_name}" 
-                         style="width:100%; height:200px; object-fit:cover; border-radius:10px; margin-bottom:10px;">
-                    <h3>${item.task_name}</h3>
-                    <button onclick="purchase('${item.task_name}')">Buy Now</button>
-                </div>
-            `).join('');
+    <div class="product-card">
+        <img src="images/${item.image_url}" alt="${item.task_name}" style="width:100%; border-radius: 8px;">
+        <h3>${item.task_name}</h3>
+        <button onclick="purchase('${item.task_name}')">Buy Now</button>
+    </div>
+`).join('');
         } catch (err) {
             console.error("Error loading products:", err);
         }
