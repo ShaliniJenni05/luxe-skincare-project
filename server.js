@@ -43,18 +43,19 @@ app.get('/api/products', (req, res) => {
 
 // 3. POST Route: Save a new order when "Confirm & Pay" is clicked
 app.post('/api/orders', (req, res) => {
-    // We are now taking 4 pieces of info from the frontend
-    const { fullName, email, username, product_name } = req.body;
-    
-    const query = 'INSERT INTO orders (full_name, email, username, product_name) VALUES (?, ?, ?, ?)';
-    
-    db.query(query, [fullName, email, username, product_name], (err, result) => {
+    // 1. Destructure all 4 pieces of data from the request body
+    const { username, product_name, fullName, email } = req.body;
+
+    // 2. Update your SQL query to include the 2 new columns
+    const query = 'INSERT INTO orders (username, product_name, full_name, email) VALUES (?, ?, ?, ?)';
+
+    // 3. Pass all 4 values into the query
+    db.query(query, [username, product_name, fullName, email], (err, result) => {
         if (err) {
-            console.error("Database Error:", err);
-            res.status(500).send("Error saving order");
+            console.error(err);
+            res.status(500).send('Error saving order');
         } else {
-            console.log(`Order saved for: ${email}`); // Success message in terminal
-            res.status(200).json({ message: "Order stored!" });
+            res.status(200).send('Order saved successfully');
         }
     });
 });
