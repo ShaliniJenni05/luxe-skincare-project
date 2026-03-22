@@ -91,7 +91,7 @@
                 <div class="product-card">
                     <img src="images/${item.image_url}" alt="${item.task_name}">
                     <h3>${item.task_name}</h3>
-                    <p style="font-weight: bold; color: #bd7d68;">$${item.price}
+                    <p style="font-weight: bold; color: #bd7d68;">$${item.price || '20.00'}
                         </p>
                     <button onclick="purchase('${item.task_name}')">Buy Now</button>
                 </div>
