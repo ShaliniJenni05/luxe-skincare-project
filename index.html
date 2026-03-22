@@ -47,7 +47,7 @@
         <input type="text" id="full-name" placeholder="Enter Full Name" style="padding:10px; border:1px solid #ddd;">
         <input type="email" id="email" placeholder="Enter Email" style="padding:10px; border:1px solid #ddd;">
         
-        <button onclick="finalCheckout()" style="background:#bd7d68; color:white; padding:10px; border:none; cursor:pointer;">Confirm & Pay</button>
+        <button onclick="finalCheckout()">Confirm & Pay</button>
         <button onclick="closeCheckout()" style="background:none; border:none; color:gray; cursor:pointer;">Cancel</button>
     </div>
 </div>
@@ -113,22 +113,32 @@ function closeCheckout() {
 }
 
 async function finalCheckout() {
-    const orderData = {
-        fullName: document.getElementById('full-name').value,
-        email: document.getElementById('email').value,
-        username: "jennirjshalini@gmail.com",
-        product_name: selectedProduct
-    };
+    try {
+        const name = document.getElementById('full-name').value;
+        const email = document.getElementById('email').value;
 
-    const response = await fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-    });
+        const orderData = {
+            fullName: name,
+            email: email,
+            username: "jennirjshalini@gmail.com",
+            product_name: selectedProduct
+        };
 
-    if (response.ok) {
-        alert("Order Saved to MySQL!");
-        closeCheckout();
+        const response = await fetch('http://localhost:5000/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if (response.ok) {
+            alert("Order Confirmed for " + name + "!"); // This is your confirmation pop-up
+            closeCheckout();
+        } else {
+            alert("Server error. Please check your terminal.");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to connect to the server.");
     }
 }
 window.onload = function() {
