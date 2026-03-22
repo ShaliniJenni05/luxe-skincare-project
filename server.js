@@ -11,8 +11,8 @@ app.use(express.json());
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '', // If you have a password for MySQL, put it here
-    database: 'task_db'
+    password: process.env.DB_PASSWORD,
+    database: 'skincare_products'
 });
 
 db.connect(err => {
@@ -27,8 +27,17 @@ db.connect(err => {
 app.get('/', (req, res) => {
     res.send('Your backend server is running!');
 });
-
+app.get('/get-products', (req, res) => {
+    const sql = "SELECT * FROM skincare_products"; // This pulls data from your new table
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching products:', err);
+            return res.status(500).send(err);
+        }
+        res.json(results); // Sends the list of products back to your website
+    });
+});
 const PORT = 5000;
 app.listen(PORT, () => {
-    console.log(Server is running on port ${PORT});
+    console.log('Server is running on port ${PORT}');
 });
