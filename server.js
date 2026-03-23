@@ -66,13 +66,30 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// 2. Draft the Email
-const mailOptions = {
-    from: 'Luxe Skincare <your-email@gmail.com>',
-    to: email, // This is the email variable from your checkout form
-    subject: 'Order Confirmed - Luxe Skincare',
-    text: `Hi ${full_name}, thank you for ordering the ${product_name}! We are preparing your glow.`
-};
+// Generate a random tracking number
+        const trackingNumber = 'LX' + Math.floor(Math.random() * 1000000);
+
+        // 2. Draft the "Luxe" Email
+        const mailOptions = {
+            from: '"Luxe Skincare" <jennirjshalini@gmail.com>',
+            to: email, 
+            subject: `✨ Order Confirmed: ${product_name}`,
+            text: `
+Hello ${fullName},
+
+Thank you for choosing Luxe Skincare! Your journey to a natural glow starts now.
+
+--- ORDER DETAILS ---
+Product: ${product_name}
+Status: Preparing for Shipment
+Tracking Number: ${trackingNumber}
+
+We will notify you once your order is on its way. If you have any questions, simply reply to this email.
+
+Stay radiant,
+The Luxe Skincare Team
+            `
+        };
 
 // 3. Send it!
 transporter.sendMail(mailOptions, (error, info) => {
