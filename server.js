@@ -1,8 +1,9 @@
-require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+require('dotenv').config();
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = 5000;
@@ -56,6 +57,31 @@ app.post('/api/orders', (req, res) => {
             res.status(500).send('Error saving order');
         } else {
             res.status(200).send('Order saved successfully');
+            // 1. Setup the "Post Office" (using Gmail as an example)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER, // Your business email
+        pass: process.env.EMAIL_PASS  // Your App Password (not your regular login)
+    }
+});
+
+// 2. Draft the Email
+const mailOptions = {
+    from: 'Luxe Skincare <your-email@gmail.com>',
+    to: email, // This is the email variable from your checkout form
+    subject: 'Order Confirmed - Luxe Skincare',
+    text: `Hi ${full_name}, thank you for ordering the ${product_name}! We are preparing your glow.`
+};
+
+// 3. Send it!
+transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        console.log("Email failed:", error);
+    } else {
+        console.log("Email sent: " + info.response);
+    }
+});
         }
     });
 });
